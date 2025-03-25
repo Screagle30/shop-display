@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="300">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    #infoBar {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      padding: 6px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      z-index: 999;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+    }
+    .section {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <iframe src="https://app.powerbi.com/reportEmbed?reportId=4b671dfd-cef0-4c18-8c84-9e865b74c16c&autoAuth=true&ctid=4a4b2898-9c41-46ac-8f91-3aedf352a70c"></iframe>
+  <div id="infoBar">
+    <div id="clock" class="section">Loading time...</div>
+    <div id="weather" class="section">
+      <span id="weatherText">Loading weather...</span>
+      <img id="weatherIcon" src="" alt="Weather Icon" style="height: 20px; vertical-align: middle; margin-left: 8px; display: none;">
+    </div>
+  </div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+      const datePart = now.toLocaleDateString('en-US', options);
+      const timePart = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      document.getElementById('clock').textContent = `${datePart} – ${timePart}`;
+    }
+
+    async function updateWeather() {
+      const apiKey = 'f4ab84570ede06adb9a9dd6981b19462';
+      const lat = 45.5608;
+      const lon = -94.1625;
+
+      try {
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
+        );
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        const temp = Math.round(data.main.temp);
+        const condition = data.weather[0].main;
+        const iconCode = data.weather[0].icon;
+
+        document.getElementById('weatherText').textContent = `${temp}°F – ${condition}`;
+        const iconEl = document.getElementById('weatherIcon');
+        iconEl.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+        iconEl.style.display = 'inline';
+      } catch (error) {
+        console.error('Weather fetch failed:', error.message || error);
+        document.getElementById('weatherText').textContent = 'Weather unavailable';
+        document.getElementById('weatherIcon').style.display = 'none';
+      }
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+    updateWeather();
+    setInterval(updateWeather, 600000);
+  </script>
+</body>
+</html>
